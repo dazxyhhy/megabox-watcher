@@ -1,0 +1,15 @@
+# Python venv
+backend/venv/
+
+# Python cache
+**/__pycache__/
+*.pyc
+
+# React build
+frontend/node_modules/
+frontend/.env
+frontend/dist/
+frontend/build/
+
+# System
+.DS_Store
