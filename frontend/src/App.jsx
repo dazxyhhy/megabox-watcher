@@ -1,4 +1,3 @@
-// frontend/src/App.jsx
 import { useEffect, useState, useRef } from "react"
 
 function App() {
@@ -7,25 +6,21 @@ function App() {
     lastCheck: null,
     info: null,
   })
-  const [wasOpen, setWasOpen] = useState(false) // 이전 상태 기억
+  const [wasOpen, setWasOpen] = useState(false)
   const audioRef = useRef(null)
 
   useEffect(() => {
-    // 백엔드에서 상태를 가져오는 함수
     const fetchStatus = async () => {
       try {
         const res = await fetch("http://localhost:5000/status")
         const data = await res.json()
         setStatus(data)
 
-        // 이전에는 안 열려 있었는데 이제 열렸다면 → 알림
         if (!wasOpen && data.open) {
           setWasOpen(true)
-          // 소리 재생
           if (audioRef.current) {
             audioRef.current.play().catch(() => {})
           }
-          // 브라우저 알림창
           alert("🎉 예매 열렸어요!! 얼른 메가박스로!")
         }
       } catch (e) {
@@ -33,11 +28,8 @@ function App() {
       }
     }
 
-    // 처음 한 번 바로 실행
     fetchStatus()
-    // 그 이후 5초마다 호출
     const timer = setInterval(fetchStatus, 5000)
-
     return () => clearInterval(timer)
   }, [wasOpen])
 
@@ -46,12 +38,13 @@ function App() {
   return (
     <div
       style={{
-        minHeight: "100vh",
+        width: "100vw",
+        height: "100vh",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: open ? "linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)" : "#0f172a",
-        color: open ? "#111827" : "#e5e7eb",
+        background: open ? "radial-gradient(circle at top, #f97316 0, #b91c1c 40%, #020617 100%)" : "radial-gradient(circle at top, #0f172a 0, #020617 45%, #000 100%)",
+        color: "#e5e7eb",
         fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
       }}
     >
@@ -59,24 +52,100 @@ function App() {
 
       <div
         style={{
-          padding: "2.5rem 3rem",
-          borderRadius: "1.5rem",
-          background: open ? "rgba(255,255,255,0.85)" : "rgba(15,23,42,0.9)",
-          boxShadow: "0 25px 50px rgba(0,0,0,0.35)",
-          textAlign: "center",
-          maxWidth: "480px",
-          width: "100%",
+          width: "min(90vw, 720px)", // 화면 거의 꽉
+          padding: "2.75rem 3.25rem",
+          borderRadius: "1.75rem",
+          background: open ? "rgba(15,23,42,0.92)" : "linear-gradient(145deg, rgba(15,23,42,0.96), rgba(15,23,42,0.85))",
+          boxShadow: "0 30px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(148,163,184,0.2)",
+          display: "flex",
+          flexDirection: "column",
+          gap: "1.75rem",
         }}
       >
-        <h1 style={{ fontSize: "1.8rem", fontWeight: 800, marginBottom: "0.75rem" }}>메가박스 예매 오픈 알리미</h1>
-        <p style={{ opacity: 0.8, marginBottom: "2rem" }}>대구신세계(동대구) · 주토피아 2 · 2025-11-26</p>
+        {/* 상단 타이틀 영역 */}
+        <div>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              padding: "0.2rem 0.9rem",
+              borderRadius: "999px",
+              backgroundColor: "rgba(15,23,42,0.9)",
+              border: "1px solid rgba(148,163,184,0.4)",
+              fontSize: "0.8rem",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              opacity: 0.9,
+              marginBottom: "0.9rem",
+            }}
+          >
+            <span
+              style={{
+                width: "0.5rem",
+                height: "0.5rem",
+                borderRadius: "999px",
+                backgroundColor: open ? "#22c55e" : "#f97316",
+                boxShadow: open ? "0 0 12px rgba(34,197,94,0.8)" : "0 0 12px rgba(249,115,22,0.9)",
+              }}
+            />
+            <span>Megabox Watcher</span>
+          </div>
 
-        <div style={{ marginBottom: "2rem" }}>
+          <h1
+            style={{
+              fontSize: "2.2rem",
+              lineHeight: 1.25,
+              fontWeight: 800,
+              margin: 0,
+            }}
+          >
+            메가박스 예매 오픈 알리미
+          </h1>
+
+          <p
+            style={{
+              marginTop: "0.6rem",
+              fontSize: "1rem",
+              opacity: 0.8,
+            }}
+          >
+            대구신세계(동대구) · 주토피아 2 · 2025-11-26
+          </p>
+        </div>
+
+        {/* 상태 표시 영역 */}
+        <div
+          style={{
+            padding: "1.4rem 1.2rem",
+            borderRadius: "1.3rem",
+            backgroundColor: "rgba(15,23,42,0.9)",
+            border: "1px solid rgba(51,65,85,0.9)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.8rem",
+          }}
+        >
           {open ? (
             <>
-              <div style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "0.5rem" }}>🎉 예매 열렸어요!!</div>
+              <div
+                style={{
+                  fontSize: "1.6rem",
+                  fontWeight: 800,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                }}
+              >
+                <span>🎉 예매 열렸어요!!</span>
+              </div>
               {info && (
-                <div style={{ fontSize: "0.95rem", lineHeight: 1.6 }}>
+                <div
+                  style={{
+                    fontSize: "0.98rem",
+                    lineHeight: 1.7,
+                  }}
+                >
                   <div>
                     상영시간{" "}
                     <strong>
@@ -89,46 +158,78 @@ function App() {
                       {info.restSeatCnt}/{info.totSeatCnt}
                     </strong>
                   </div>
+                  <div style={{ opacity: 0.8, marginTop: "0.3rem" }}>지금 바로 예매 페이지로 이동해서 자리 잡으세요!</div>
                 </div>
               )}
             </>
           ) : (
             <>
-              <div style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "0.5rem" }}>아직 예매 안 열렸어요 😭</div>
-              <div style={{ fontSize: "0.95rem", opacity: 0.8 }}>
-                백엔드에서 30초마다 상영시간표를 확인하고 있어요.
-                <br />이 페이지는 5초마다 상태를 새로고침합니다.
+              <div
+                style={{
+                  fontSize: "1.5rem",
+                  fontWeight: 800,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                }}
+              >
+                <span>아직 예매 안 열렸어요 😭</span>
+              </div>
+              <div
+                style={{
+                  fontSize: "0.95rem",
+                  opacity: 0.85,
+                  lineHeight: 1.7,
+                }}
+              >
+                백엔드에서 <strong>30초마다</strong> 상영시간표를 확인하고 있어요.
+                <br />이 화면은 <strong>5초마다</strong> 상태를 자동으로 새로고침합니다.
               </div>
             </>
           )}
         </div>
 
+        {/* 하단 정보 + 버튼 */}
         <div
           style={{
-            fontSize: "0.8rem",
-            opacity: 0.7,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1rem",
+            flexWrap: "wrap",
+            marginTop: "0.25rem",
           }}
         >
-          마지막 체크: {lastCheck || "-"}
-        </div>
+          <div
+            style={{
+              fontSize: "0.82rem",
+              opacity: 0.7,
+            }}
+          >
+            마지막 체크: {lastCheck || "-"}
+          </div>
 
-        <a
-          href="https://www.megabox.co.kr/booking/timetable"
-          target="_blank"
-          rel="noreferrer"
-          style={{
-            marginTop: "1.5rem",
-            display: "inline-block",
-            padding: "0.75rem 1.5rem",
-            borderRadius: "999px",
-            border: "1px solid rgba(148,163,184,0.5)",
-            fontSize: "0.9rem",
-            textDecoration: "none",
-            color: open ? "#111827" : "#e5e7eb",
-          }}
-        >
-          메가박스 예매 페이지 열기
-        </a>
+          <a
+            href="https://www.megabox.co.kr/booking/timetable"
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              padding: "0.8rem 1.6rem",
+              borderRadius: "999px",
+              border: "1px solid rgba(148,163,184,0.7)",
+              fontSize: "0.9rem",
+              textDecoration: "none",
+              color: "#e5e7eb",
+              background: "linear-gradient(135deg, #0f172a, #111827, #1f2937)",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.4rem",
+            }}
+          >
+            메가박스 예매 페이지 열기
+          </a>
+        </div>
       </div>
     </div>
   )
