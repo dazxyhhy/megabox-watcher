@@ -9,6 +9,13 @@ function App() {
   const [wasOpen, setWasOpen] = useState(false)
   const audioRef = useRef(null)
 
+  // ✅ 브라우저 알림 권한 요청 (처음 한 번만)
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission()
+    }
+  }, [])
+
   useEffect(() => {
     const fetchStatus = async () => {
       try {
@@ -18,9 +25,21 @@ function App() {
 
         if (!wasOpen && data.open) {
           setWasOpen(true)
+
+          // 🔔 소리 (파일 있으면 재생, 없어도 에러 안 나게)
           if (audioRef.current) {
             audioRef.current.play().catch(() => {})
           }
+
+          // 🔔 윈도우 기본 알림 (브라우저 Notification)
+          if ("Notification" in window && Notification.permission === "granted") {
+            new Notification("메가박스 예매 오픈!", {
+              body: "주토피아 2 예매가 방금 열렸어요!",
+              icon: "/favicon.ico", // 없어도 상관 없음
+            })
+          }
+
+          // 기존 alert (원하면 지워도 됨)
           alert("🎉 예매 열렸어요!! 얼른 메가박스로!")
         }
       } catch (e) {
