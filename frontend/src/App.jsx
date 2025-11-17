@@ -4,12 +4,12 @@ function App() {
   const [status, setStatus] = useState({
     open: false,
     lastCheck: null,
-    info: null, // 처음엔 null, 이후엔 배열 또는 객체
+    info: null,
   })
   const [wasOpen, setWasOpen] = useState(false)
   const audioRef = useRef(null)
 
-  // ✅ 브라우저 알림 권한 요청 (처음 한 번만)
+  // 브라우저 알림 권한 요청
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission()
@@ -21,18 +21,21 @@ function App() {
       try {
         const res = await fetch("http://localhost:5000/status")
         const data = await res.json()
-        setStatus(data)
 
-        // open이 false → true로 바뀌는 순간 한 번만 알림
+        setStatus((prev) => {
+          const prevPayload = { open: prev.open, info: prev.info }
+          const nextPayload = { open: data.open, info: data.info }
+          if (JSON.stringify(prevPayload) === JSON.stringify(nextPayload)) return prev
+          return data
+        })
+
         if (!wasOpen && data.open) {
           setWasOpen(true)
 
-          // 🔔 소리
           if (audioRef.current) {
             audioRef.current.play().catch(() => {})
           }
 
-          // 🔔 윈도우 기본 알림 (브라우저 Notification)
           if ("Notification" in window && Notification.permission === "granted") {
             new Notification("메가박스 예매 오픈!", {
               body: "주토피아 2 예매가 방금 열렸어요!",
@@ -53,242 +56,240 @@ function App() {
   }, [wasOpen])
 
   const { open, lastCheck, info } = status
-
-  // ✅ info를 항상 배열로 맞춰두기 (null/객체/배열 모두 처리)
   const showtimes = Array.isArray(info) ? info : info ? [info] : []
 
   return (
     <div
       style={{
         width: "100vw",
-        height: "100vh",
+        minHeight: "100vh",
+        background: open ? "linear-gradient(180deg, #ffffff 0%, #fef9c3 100%)" : "linear-gradient(180deg, #ffffff 0%, #e0f2fe 100%)",
         display: "flex",
-        alignItems: "center",
         justifyContent: "center",
-        background: open ? "radial-gradient(circle at top, #f97316 0, #b91c1c 40%, #020617 100%)" : "radial-gradient(circle at top, #0f172a 0, #020617 45%, #000 100%)",
-        color: "#e5e7eb",
-        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+        alignItems: "flex-start",
+        fontFamily: "system-ui, sans-serif",
+        color: "#334155",
+        padding: "1.5rem 1rem",
+        boxSizing: "border-box",
+        overflowY: "auto",
       }}
     >
       <audio ref={audioRef} src="/alarm.mp3" preload="auto" />
 
       <div
         style={{
-          width: "min(90vw, 720px)",
-          padding: "2.75rem 3.25rem",
-          borderRadius: "1.75rem",
-          background: open ? "rgba(15,23,42,0.92)" : "linear-gradient(145deg, rgba(15,23,42,0.96), rgba(15,23,42,0.85))",
-          boxShadow: "0 30px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(148,163,184,0.2)",
-          display: "flex",
-          flexDirection: "column",
-          gap: "1.75rem",
+          width: "100%",
+          maxWidth: "840px",
+          background: "rgba(255,255,255,0.96)",
+          backdropFilter: "blur(10px)",
+          borderRadius: "1.4rem",
+          padding: "2rem 2.2rem",
+          boxShadow: "0 6px 14px rgba(0,0,0,0.04), 0 12px 32px rgba(0,0,0,0.05)",
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 1.1fr) minmax(0, 0.9fr)",
+          gap: "1.8rem",
+          border: "1px solid #e2e8f0",
+          margin: "auto",
         }}
       >
-        {/* 상단 타이틀 영역 */}
-        <div>
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              padding: "0.2rem 0.9rem",
-              borderRadius: "999px",
-              backgroundColor: "rgba(15,23,42,0.9)",
-              border: "1px solid rgba(148,163,184,0.4)",
-              fontSize: "0.8rem",
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              opacity: 0.9,
-              marginBottom: "0.9rem",
-            }}
-          >
-            <span
+        {/* LEFT: title & info */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.4rem" }}>
+          {/* Badge + Title */}
+          <div>
+            <div
               style={{
-                width: "0.5rem",
-                height: "0.5rem",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                padding: "0.3rem 1rem",
                 borderRadius: "999px",
-                backgroundColor: open ? "#22c55e" : "#f97316",
-                boxShadow: open ? "0 0 12px rgba(34,197,94,0.8)" : "0 0 12px rgba(249,115,22,0.9)",
+                background: "#f1f5f9",
+                fontSize: "0.75rem",
+                letterSpacing: "0.06em",
+                color: "#475569",
+                border: "1px solid #e2e8f0",
               }}
-            />
-            <span>Megabox Watcher</span>
+            >
+              <span
+                style={{
+                  width: "0.45rem",
+                  height: "0.45rem",
+                  borderRadius: "999px",
+                  backgroundColor: open ? "#22c55e" : "#f97316",
+                }}
+              />
+              Megabox Watcher
+            </div>
+
+            <h1
+              style={{
+                marginTop: "0.9rem",
+                fontSize: "2rem",
+                fontWeight: 800,
+                color: "#1e293b",
+              }}
+            >
+              메가박스 예매 오픈 알리미
+            </h1>
+
+            <p style={{ marginTop: "0.4rem", color: "#475569", fontSize: "0.95rem" }}>대구신세계(동대구) · 주토피아 2 · 2025-11-26</p>
           </div>
 
-          <h1
+          {/* MAIN STATUS CARD */}
+          <div
             style={{
-              fontSize: "2.2rem",
-              lineHeight: 1.25,
-              fontWeight: 800,
-              margin: 0,
+              background: "#ffffff",
+              padding: "1.2rem 1.3rem",
+              borderRadius: "1.1rem",
+              border: "1px solid #e2e8f0",
+              boxShadow: "0 3px 12px rgba(0,0,0,0.03)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.9rem",
             }}
           >
-            메가박스 예매 오픈 알리미
-          </h1>
+            {open ? (
+              <>
+                <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "#14532d" }}>🎉 예매 열렸어요!</div>
 
-          <p
-            style={{
-              marginTop: "0.6rem",
-              fontSize: "1rem",
-              opacity: 0.8,
-            }}
-          >
-            대구신세계(동대구) · 주토피아 2 · 2025-11-26
-          </p>
-        </div>
+                <div style={{ color: "#334155", fontSize: "0.92rem" }}>
+                  총 <strong>{showtimes.length}</strong>개 회차가 오픈됐어요.
+                </div>
 
-        {/* 상태 표시 영역 */}
-        <div
-          style={{
-            padding: "1.4rem 1.2rem",
-            borderRadius: "1.3rem",
-            backgroundColor: "rgba(15,23,42,0.9)",
-            border: "1px solid rgba(51,65,85,0.9)",
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.8rem",
-          }}
-        >
-          {open ? (
-            <>
-              <div
-                style={{
-                  fontSize: "1.6rem",
-                  fontWeight: 800,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                }}
-              >
-                <span>🎉 예매 열렸어요!!</span>
-              </div>
-
-              {showtimes.length > 0 && (
                 <div
                   style={{
-                    fontSize: "0.98rem",
-                    lineHeight: 1.7,
                     display: "flex",
                     flexDirection: "column",
-                    gap: "0.6rem",
+                    gap: "0.45rem",
                   }}
                 >
-                  <div style={{ opacity: 0.85 }}>
-                    총 <strong>{showtimes.length}</strong>개 회차가 열려 있어요.
-                  </div>
-
-                  {/* 열린 회차 목록 */}
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "0.4rem",
-                    }}
-                  >
-                    {showtimes.map((show, idx) => (
-                      <div
-                        key={`${show.playStartTime}-${show.theabNo || idx}`}
-                        style={{
-                          padding: "0.55rem 0.75rem",
-                          borderRadius: "0.75rem",
-                          backgroundColor: "rgba(15,23,42,0.9)",
-                          border: "1px solid rgba(51,65,85,0.9)",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          gap: "0.5rem",
-                          fontSize: "0.9rem",
-                        }}
-                      >
-                        <div>
-                          <div>
-                            <strong>
-                              {show.playStartTime} ~ {show.playEndTime}
-                            </strong>
-                          </div>
-                          {show.theabExpoNm && <div style={{ opacity: 0.8, fontSize: "0.85rem" }}>{show.theabExpoNm}</div>}
-                        </div>
-                        <div style={{ textAlign: "right", fontSize: "0.85rem" }}>
-                          잔여 좌석{" "}
-                          <strong>
-                            {show.restSeatCnt}/{show.totSeatCnt}
-                          </strong>
-                        </div>
+                  {showtimes.map((show, idx) => (
+                    <div
+                      key={`${show.playStartTime}-${idx}`}
+                      style={{
+                        background: "#f8fafc",
+                        borderRadius: "0.75rem",
+                        padding: "0.75rem 0.9rem",
+                        border: "1px solid #e2e8f0",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        fontSize: "0.88rem",
+                        color: "#334155",
+                      }}
+                    >
+                      <div>
+                        <strong>
+                          {show.playStartTime} ~ {show.playEndTime}
+                        </strong>
+                        {show.theabExpoNm && <div style={{ marginTop: "0.2rem", opacity: 0.7 }}>{show.theabExpoNm}</div>}
                       </div>
-                    ))}
-                  </div>
-
-                  <div style={{ opacity: 0.8, marginTop: "0.3rem" }}>지금 바로 예매 페이지로 이동해서 자리 잡으세요!</div>
+                      <div style={{ textAlign: "right" }}>
+                        잔여{" "}
+                        <strong>
+                          {show.restSeatCnt}/{show.totSeatCnt}
+                        </strong>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              )}
-            </>
-          ) : (
-            <>
-              <div
-                style={{
-                  fontSize: "1.5rem",
-                  fontWeight: 800,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                }}
-              >
-                <span>아직 예매 안 열렸어요 😭</span>
-              </div>
-              <div
-                style={{
-                  fontSize: "0.95rem",
-                  opacity: 0.85,
-                  lineHeight: 1.7,
-                }}
-              >
-                백엔드에서 <strong>10초마다</strong> 상영시간표를 확인하고 있어요.
-                <br />이 화면은 <strong>5초마다</strong> 상태를 자동으로 새로고침합니다.
-              </div>
-            </>
-          )}
-        </div>
 
-        {/* 하단 정보 + 버튼 */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "1rem",
-            flexWrap: "wrap",
-            marginTop: "0.25rem",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "0.82rem",
-              opacity: 0.7,
-            }}
-          >
-            마지막 체크: {lastCheck || "-"}
+                <div style={{ marginTop: "0.4rem", opacity: 0.7, fontSize: "0.86rem" }}>놓치지 말고 지금 바로 예매 페이지로 이동하세요!</div>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: "1.2rem", fontWeight: 700 }}>아직 예매 안 열렸어요 😭</div>
+
+                <div style={{ fontSize: "0.9rem", opacity: 0.78, lineHeight: 1.6 }}>
+                  백엔드에서 30초마다 상영시간표를 확인하고 있어요.
+                  <br />이 화면은 5초마다 자동으로 갱신됩니다.
+                </div>
+              </>
+            )}
           </div>
 
+          <div style={{ fontSize: "0.78rem", opacity: 0.65 }}>마지막 체크: {lastCheck || "-"}</div>
+        </div>
+
+        {/* RIGHT: Poster + Button */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div
+            style={{
+              borderRadius: "1.1rem",
+              background: "#ffffff",
+              border: "1px solid #e2e8f0",
+              boxShadow: "0 6px 16px rgba(0,0,0,0.04)",
+              padding: "0.9rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.8rem",
+            }}
+          >
+            {/* 🎬 실제 포스터 이미지 */}
+            <div
+              style={{
+                width: "100%",
+                aspectRatio: "3 / 4",
+                borderRadius: "0.9rem",
+                overflow: "hidden",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundImage: "url('https://search.pstatic.net/common?quality=75&direct=true&src=https%3A%2F%2Fmovie-phinf.pstatic.net%2F20251114_82%2F1763106586529dg12c_JPEG%2Fmovie_image.jpg')",
+              }}
+            ></div>
+
+            <div
+              style={{
+                fontSize: "0.86rem",
+                opacity: 0.78,
+                lineHeight: 1.5,
+              }}
+            >
+              주토피아의 친구들이 돌아왔어요!
+              <br />닉 ❤️ 주디
+            </div>
+          </div>
+
+          {/* 버튼은 그대로 */}
           <a
             href="https://www.megabox.co.kr/booking/timetable"
             target="_blank"
             rel="noreferrer"
             style={{
-              padding: "0.8rem 1.6rem",
+              padding: "0.9rem 1.4rem",
               borderRadius: "999px",
-              border: "1px solid rgba(148,163,184,0.7)",
-              fontSize: "0.9rem",
+              background: "linear-gradient(135deg, #38bdf8, #818cf8)",
+              border: "1px solid #c7d2fe",
+              color: "white",
               textDecoration: "none",
-              color: "#e5e7eb",
-              background: "linear-gradient(135deg, #0f172a, #111827, #1f2937)",
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "0.4rem",
+              fontWeight: 600,
+              textAlign: "center",
+              fontSize: "0.92rem",
+              boxShadow: "0 5px 16px rgba(129,140,248,0.35)",
+              marginTop: "0.2rem",
             }}
           >
             메가박스 예매 페이지 열기
           </a>
         </div>
       </div>
+
+      <style>
+        {`
+          @keyframes posterShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+
+          @media (max-width: 768px) {
+            /* 작은 화면에서는 단일 컬럼으로 변경 */
+            div[style*="grid-template-columns"] {
+              grid-template-columns: minmax(0, 1fr) !important;
+              padding: 1.6rem 1.4rem !important;
+            }
+          }
+        `}
+      </style>
     </div>
   )
 }
