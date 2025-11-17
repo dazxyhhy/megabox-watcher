@@ -4,7 +4,7 @@ function App() {
   const [status, setStatus] = useState({
     open: false,
     lastCheck: null,
-    info: null,
+    info: null, // 처음엔 null, 이후엔 배열 또는 객체
   })
   const [wasOpen, setWasOpen] = useState(false)
   const audioRef = useRef(null)
@@ -23,10 +23,11 @@ function App() {
         const data = await res.json()
         setStatus(data)
 
+        // open이 false → true로 바뀌는 순간 한 번만 알림
         if (!wasOpen && data.open) {
           setWasOpen(true)
 
-          // 🔔 소리 (파일 있으면 재생, 없어도 에러 안 나게)
+          // 🔔 소리
           if (audioRef.current) {
             audioRef.current.play().catch(() => {})
           }
@@ -35,11 +36,10 @@ function App() {
           if ("Notification" in window && Notification.permission === "granted") {
             new Notification("메가박스 예매 오픈!", {
               body: "주토피아 2 예매가 방금 열렸어요!",
-              icon: "/favicon.ico", // 없어도 상관 없음
+              icon: "/favicon.ico",
             })
           }
 
-          // 기존 alert (원하면 지워도 됨)
           alert("🎉 예매 열렸어요!! 얼른 메가박스로!")
         }
       } catch (e) {
@@ -53,6 +53,9 @@ function App() {
   }, [wasOpen])
 
   const { open, lastCheck, info } = status
+
+  // ✅ info를 항상 배열로 맞춰두기 (null/객체/배열 모두 처리)
+  const showtimes = Array.isArray(info) ? info : info ? [info] : []
 
   return (
     <div
@@ -71,7 +74,7 @@ function App() {
 
       <div
         style={{
-          width: "min(90vw, 720px)", // 화면 거의 꽉
+          width: "min(90vw, 720px)",
           padding: "2.75rem 3.25rem",
           borderRadius: "1.75rem",
           background: open ? "rgba(15,23,42,0.92)" : "linear-gradient(145deg, rgba(15,23,42,0.96), rgba(15,23,42,0.85))",
@@ -158,25 +161,61 @@ function App() {
               >
                 <span>🎉 예매 열렸어요!!</span>
               </div>
-              {info && (
+
+              {showtimes.length > 0 && (
                 <div
                   style={{
                     fontSize: "0.98rem",
                     lineHeight: 1.7,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.6rem",
                   }}
                 >
-                  <div>
-                    상영시간{" "}
-                    <strong>
-                      {info.playStartTime} ~ {info.playEndTime}
-                    </strong>
+                  <div style={{ opacity: 0.85 }}>
+                    총 <strong>{showtimes.length}</strong>개 회차가 열려 있어요.
                   </div>
-                  <div>
-                    잔여 좌석{" "}
-                    <strong>
-                      {info.restSeatCnt}/{info.totSeatCnt}
-                    </strong>
+
+                  {/* 열린 회차 목록 */}
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0.4rem",
+                    }}
+                  >
+                    {showtimes.map((show, idx) => (
+                      <div
+                        key={`${show.playStartTime}-${show.theabNo || idx}`}
+                        style={{
+                          padding: "0.55rem 0.75rem",
+                          borderRadius: "0.75rem",
+                          backgroundColor: "rgba(15,23,42,0.9)",
+                          border: "1px solid rgba(51,65,85,0.9)",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          gap: "0.5rem",
+                          fontSize: "0.9rem",
+                        }}
+                      >
+                        <div>
+                          <div>
+                            <strong>
+                              {show.playStartTime} ~ {show.playEndTime}
+                            </strong>
+                          </div>
+                          {show.theabExpoNm && <div style={{ opacity: 0.8, fontSize: "0.85rem" }}>{show.theabExpoNm}</div>}
+                        </div>
+                        <div style={{ textAlign: "right", fontSize: "0.85rem" }}>
+                          잔여 좌석{" "}
+                          <strong>
+                            {show.restSeatCnt}/{show.totSeatCnt}
+                          </strong>
+                        </div>
+                      </div>
+                    ))}
                   </div>
+
                   <div style={{ opacity: 0.8, marginTop: "0.3rem" }}>지금 바로 예매 페이지로 이동해서 자리 잡으세요!</div>
                 </div>
               )}
@@ -201,7 +240,7 @@ function App() {
                   lineHeight: 1.7,
                 }}
               >
-                백엔드에서 <strong>30초마다</strong> 상영시간표를 확인하고 있어요.
+                백엔드에서 <strong>10초마다</strong> 상영시간표를 확인하고 있어요.
                 <br />이 화면은 <strong>5초마다</strong> 상태를 자동으로 새로고침합니다.
               </div>
             </>
