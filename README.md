@@ -5,7 +5,7 @@
 대구신세계(동대구)점 개봉일만을 다루고 있습니다.
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/96078e39-3f1c-44fa-88fd-0601b00642b8" width="48%" />
+  <img src="https://github.com/user-attachments/assets/f2fc6a99-b726-41a3-8642-dfbf853c1dad" width="48%" />
   <img src="https://github.com/user-attachments/assets/9ee0f993-e681-4c72-88b9-5ca67b7c04b8" width="48%" />
 </p>
 
@@ -22,10 +22,6 @@
 💻 프론트에서 5초 간격 자동 새로고침
 
 📱 반응형 UI (기본 적용)
-
-
-<img width="978" height="738" alt="image" src="https://github.com/user-attachments/assets/96078e39-3f1c-44fa-88fd-0601b00642b8" />
-<img width="1075" height="866" alt="image" src="https://github.com/user-attachments/assets/9ee0f993-e681-4c72-88b9-5ca67b7c04b8" />
 
 
 
