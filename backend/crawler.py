@@ -3,13 +3,13 @@ import requests
 
 BRCH_NM = "대구신세계(동대구)"
 BRCH_NO = "7011"
-DATE = "20251126"
-TARGET_MOVIE = "주토피아 2"
+DATES = ["20251203", "20251204"]
+TARGET_MOVIE = "반지의 제왕"
 
 API_URL = "https://www.megabox.co.kr/on/oh/ohc/Brch/schedulePage.do"
 
 
-def check_once():
+def fetch_date(date):
     headers = {
         "User-Agent": "Mozilla/5.0",
         "Referer": "https://www.megabox.co.kr/booking/timetable",
@@ -20,7 +20,7 @@ def check_once():
         "brchNo": BRCH_NO,
         "brchNo1": BRCH_NO,
         "masterType": "brch",
-        "playDe": DATE,
+        "playDe": date,
         "firstAt": "N",
     }
 
@@ -35,10 +35,31 @@ def check_once():
     for item in movie_list:
         title = item.get("rpstMovieNm", "")
         if TARGET_MOVIE in title:
+            item["date"] = date  # 날짜 포함
             result.append(item)
 
-    # 👉 회차가 1개라도 있으면 open=True + 회차 리스트 반환
-    if result:
-        return True, result
+    return result
 
-    return False, []
+def check_once():
+    """
+    → 날짜별로 open 여부를 따로 반환  
+    → 전체 open 여부 + 모든 날짜 결과도 함께 반환
+    """
+    by_date = {}
+    merged_info = []
+
+    for date in DATES:
+        items = fetch_date(date)
+        opened = len(items) > 0
+
+        by_date[date] = {
+            "open": opened,
+            "info": items,
+        }
+
+        merged_info.extend(items)
+
+    any_open = any(by_date[d]["open"] for d in by_date)
+
+    return any_open, merged_info, by_date
+
